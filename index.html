@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>屁眼王國：克爾文的入侵</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #222;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; /* 防止捲動 */
+        }
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none; /* 讓點擊穿透到 Canvas */
+        }
+        #game-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #ffcc00;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        button:hover { background: #ffdd44; }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+        
+        .stat-box { font-size: 20px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+        canvas { display: block; background: #3a3a3a; cursor: crosshair; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="stat-box">💰 金幣: <span id="goldDisplay">0</span></div>
+        <div class="stat-box" style="color: #ff6666;">👿 敵人數量: <span id="enemyCount">0</span></div>
+        <div class="stat-box" style="margin-top:10px;">🏰 王國生命: <span id="baseHp">100</span>%</div>
+    </div>
+
+    <div id="game-controls">
+        <div>
+            <div style="font-size:12px; color:#aaa;">每次抽卡消耗 <span id="costDisplay">50</span> 金幣</div>
+            <button id="gachaBtn" onclick="game.gacha()">🎴 召喚軍隊 (抽卡)</button>
+        </div>
+        <div id="messageArea" style="color: #fff; font-size: 14px; max-width: 200px;">
+            點擊召喚來抵禦克爾文！
+        </div>
+    </div>
+
+<script>
+/**
+ * 遊戲設定與資料配置
+ */
+const CONFIG = {
+    fps: 60,
+    startGold: 100,
+    goldPerSec: 1,
+    gachaCost: 50,
+    pathColor: "#555",
+    pathWidth: 40
+};
+
+// 圖片資源對映 (請將你的圖片放入 images 資料夾並對應檔名)
+const ASSETS = {
+    // 我方單位 (Faraway Kingdom)
+    friendlies: [
+        { id: 'f1', name: '屁屁民兵', img: 'images/hero_1.png', color: '#00ccff', hp: 50, atk: 5, range: 30, speed: 1.5, weight: 40 }, // 高機率
+        { id: 'f2', name: '直腸弓手', img: 'images/hero_2.png', color: '#0088ff', hp: 40, atk: 15, range: 120, speed: 1.2, weight: 25 },
+        { id: 'f3', name: '括約肌騎士', img: 'images/hero_3.png', color: '#0044ff', hp: 150, atk: 8, range: 30, speed: 1.0, weight: 20 },
+        { id: 'f4', name: '通暢法師', img: 'images/hero_4.png', color: '#8800ff', hp: 60, atk: 30, range: 100, speed: 0.8, weight: 10 },
+        { id: 'f5', name: '國王本人', img: 'images/hero_5.png', color: 'gold',     hp: 300, atk: 50, range: 40, speed: 0.5, weight: 5 }  // SSR
+    ],
+    // 敵方單位 (Kelvin's Army)
+    enemies: [
+        { id: 'e1', name: '克爾文小兵', img: 'images/enemy_1.png', color: '#ff8888', hp: 40, atk: 5, range: 30, speed: 1.0, reward: 10 },
+        { id: 'e2', name: '高速斥侯',   img: 'images/enemy_2.png', color: '#ff5555', hp: 30, atk: 8, range: 30, speed: 2.5, reward: 15 },
+        { id: 'e3', name: '重裝步兵',   img: 'images/enemy_3.png', color: '#cc0000', hp: 120, atk: 10, range: 30, speed: 0.7, reward: 30 },
+        { id: 'e4', name: '邪惡術士',   img: 'images/enemy_4.png', color: '#880000', hp: 50, atk: 20, range: 110, speed: 0.8, reward: 40 },
+        { id: 'boss', name: '克爾文大帝', img: 'images/boss.png',   color: '#000000', hp: 1000, atk: 80, range: 50, speed: 0.4, reward: 500, isBoss: true }
+    ]
+};
+
+// 預先載入圖片
+const images = {};
+function loadImages() {
+    const allUnits = [...ASSETS.friendlies, ...ASSETS.enemies];
+    allUnits.forEach(unit => {
+        const img = new Image();
+        img.src = unit.img;
+        images[unit.id] = img;
+    });
+}
+
+/**
+ * 遊戲核心類別
+ */
+class Game {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        
+        // 遊戲狀態
+        this.gold = CONFIG.startGold;
+        this.units = []; // 所有的單位 (敵方 + 我方)
+        this.gameOver = false;
+        this.lastTime = 0;
+        this.timer = 0;
+        
+        // 設定路徑 (簡單的 S 型路徑)
+        this.path = this.createPath();
+        
+        // 基地血量
+        this.myBaseHp = 1000;
+        this.maxBaseHp = 1000;
+        
+        // 敵人生成計時器
+        this.enemySpawnTimer = 0;
+        this.bossSpawned = false;
+
+        // UI 綁定
+        this.uiGold = document.getElementById('goldDisplay');
+        this.uiCount = document.getElementById('enemyCount');
+        this.uiBase = document.getElementById('baseHp');
+        this.uiMsg = document.getElementById('messageArea');
+        
+        // 綁定事件
+        window.addEventListener('resize', () => this.resize());
+        
+        loadImages();
+        this.loop = this.loop.bind(this);
+        requestAnimationFrame(this.loop);
+        
+        // 每秒給金幣
+        setInterval(() => {
+            if(!this.gameOver) {
+                this.addGold(CONFIG.goldPerSec);
+            }
+        }, 1000);
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.path = this.createPath(); // 重算路徑
+    }
+
+    // 建立路徑點 (根據螢幕大小)
+    createPath() {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        // 定義轉折點
+        return [
+            {x: w * 0.1, y: h * 0.2}, // Enemy Base
+            {x: w * 0.8, y: h * 0.2},
+            {x: w * 0.8, y: h * 0.5},
+            {x: w * 0.2, y: h * 0.5},
+            {x: w * 0.2, y: h * 0.8},
+            {x: w * 0.9, y: h * 0.8}  // My Base
+        ];
+    }
+
+    addGold(amount) {
+        this.gold += amount;
+        this.uiGold.innerText = Math.floor(this.gold);
+    }
+
+    // 抽卡系統
+    gacha() {
+        if (this.gold < CONFIG.gachaCost) {
+            this.uiMsg.innerText = "金幣不足！快去殺敵！";
+            return;
+        }
+        this.addGold(-CONFIG.gachaCost);
+        
+        // 權重隨機算法
+        const totalWeight = ASSETS.friendlies.reduce((sum, u) => sum + u.weight, 0);
+        let random = Math.random() * totalWeight;
+        let selectedUnit = ASSETS.friendlies[0];
+        
+        for (let unit of ASSETS.friendlies) {
+            if (random < unit.weight) {
+                selectedUnit = unit;
+                break;
+            }
+            random -= unit.weight;
+        }
+
+        this.spawnUnit(selectedUnit, 'friendly');
+        this.uiMsg.innerText = `召喚了：${selectedUnit.name}!`;
+    }
+
+    spawnUnit(stats, side) {
+        // friendly 從路徑末端往回走，enemy 從起點走
+        const isFriendly = side === 'friendly';
+        const startPathIndex = isFriendly ? this.path.length - 1 : 0;
+        
+        this.units.push(new Unit(stats, side, startPathIndex, this.path));
+    }
+
+    spawnEnemyWave(dt) {
+        this.enemySpawnTimer += dt;
+        // 簡單的生成邏輯：隨時間越生越快
+        let spawnRate = 3000; // 毫秒
+        
+        if (this.enemySpawnTimer > spawnRate) {
+            const r = Math.random();
+            let enemyType;
+            
+            // 隨機選一種敵人 (越強的機率越低，或依時間解鎖，這裡簡單隨機)
+            if (r > 0.9) enemyType = ASSETS.enemies[3]; // 法師
+            else if (r > 0.7) enemyType = ASSETS.enemies[2]; // 重裝
+            else if (r > 0.4) enemyType = ASSETS.enemies[1]; // 斥侯
+            else enemyType = ASSETS.enemies[0]; // 小兵
+
+            this.spawnUnit(enemyType, 'enemy');
+            this.enemySpawnTimer = 0;
+        }
+
+        // BOSS 生成機制 (遊戲開始 60 秒後或殺敵數足夠時)
+        if (!this.bossSpawned && this.timer > 60000) {
+            this.spawnUnit(ASSETS.enemies[4], 'enemy');
+            this.bossSpawned = true;
+            this.uiMsg.innerText = "警告！！克爾文大帝出現了！";
+            this.uiMsg.style.color = "red";
+            this.uiMsg.style.fontSize = "20px";
+        }
+    }
+
+    update(dt) {
+        if (this.gameOver) return;
+        this.timer += dt;
+
+        this.spawnEnemyWave(dt);
+
+        // 排序：確保渲染順序
+        this.units.sort((a, b) => a.y - b.y);
+
+        // 更新所有單位
+        this.units.forEach(unit => unit.update(dt, this.units));
+
+        // 移除死亡單位
+        this.units = this.units.filter(u => {
+            if (u.dead) {
+                if (u.side === 'enemy') {
+                    this.addGold(u.stats.reward || 10);
+                    // 粒子特效可在這裡加
+                }
+                return false;
+            }
+            return true;
+        });
+
+        // 檢查是否有敵人到達終點 (簡單判定：最後一個路徑點)
+        const myBasePos = this.path[this.path.length - 1];
+        this.units.forEach(u => {
+            if (u.side === 'enemy' && u.distanceTo(myBasePos.x, myBasePos.y) < 10) {
+                this.myBaseHp -= 10; // 扣基地血
+                u.dead = true; // 衝進去後消失
+                this.uiMsg.innerText = "王國受到傷害！";
+            }
+        });
+
+        // 更新 UI
+        this.uiCount.innerText = this.units.filter(u => u.side === 'enemy').length;
+        this.uiBase.innerText = Math.floor((this.myBaseHp / this.maxBaseHp) * 100);
+
+        if (this.myBaseHp <= 0) {
+            this.endGame(false);
+        } else if (this.bossSpawned && this.units.filter(u => u.stats.isBoss).length === 0) {
+             // 殺死 Boss 勝利邏輯 (簡化版)
+             // 實際 RTS 應該是推掉對方基地，這邊簡化為守城+殺Boss
+             this.endGame(true);
+        }
+    }
+
+    draw() {
+        // 清空畫面
+        this.ctx.fillStyle = '#222';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // 畫路徑
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = CONFIG.pathColor;
+        this.ctx.lineWidth = CONFIG.pathWidth;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        if (this.path.length > 0) {
+            this.ctx.moveTo(this.path[0].x, this.path[0].y);
+            for (let i = 1; i < this.path.length; i++) {
+                this.ctx.lineTo(this.path[i].x, this.path[i].y);
+            }
+        }
+        this.ctx.stroke();
+
+        // 畫基地
+        const start = this.path[0];
+        const end = this.path[this.path.length-1];
+        
+        // 敵方基地
+        this.ctx.fillStyle = "#ff4444";
+        this.ctx.beginPath(); this.ctx.arc(start.x, start.y, 30, 0, Math.PI*2); this.ctx.fill();
+        this.ctx.fillStyle = "white"; this.ctx.fillText("克爾文巢穴", start.x - 30, start.y - 40);
+
+        // 我方基地
+        this.ctx.fillStyle = "#4444ff";
+        this.ctx.beginPath(); this.ctx.arc(end.x, end.y, 30, 0, Math.PI*2); this.ctx.fill();
+        this.ctx.fillStyle = "white"; this.ctx.fillText("屁眼城堡", end.x - 20, end.y - 40);
+
+        // 畫單位
+        this.units.forEach(unit => unit.draw(this.ctx));
+        
+        // 結束畫面
+        if (this.gameOver) {
+            this.ctx.fillStyle = "rgba(0,0,0,0.7)";
+            this.ctx.fillRect(0,0,this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = "white";
+            this.ctx.font = "40px Arial";
+            this.ctx.textAlign = "center";
+            this.ctx.fillText(this.victory ? "屁眼王國勝利！" : "王國淪陷...", this.canvas.width/2, this.canvas.height/2);
+        }
+    }
+
+    loop(timestamp) {
+        let dt = timestamp - this.lastTime;
+        this.lastTime = timestamp;
+        
+        this.update(dt);
+        this.draw();
+        
+        requestAnimationFrame(this.loop);
+    }
+
+    endGame(victory) {
+        this.gameOver = true;
+        this.victory = victory;
+    }
+}
+
+/**
+ * 單位類別
+ */
+class Unit {
+    constructor(stats, side, pathIndex, pathPoints) {
+        this.stats = { ...stats }; // 複製數值
+        this.currentHp = this.stats.hp;
+        this.side = side; // 'friendly' or 'enemy'
+        
+        this.path = pathPoints;
+        this.pathIndex = pathIndex; // 當前目標的路徑點索引
+        
+        // 初始位置
+        // 如果是敵人，從 0 開始，目標是 1, 2...
+        // 如果是我方，從 end 開始，目標是 end-1...
+        this.targetIndex = side === 'enemy' ? pathIndex + 1 : pathIndex - 1;
+        
+        // 放在上一點的位置作為初始
+        const startPos = this.path[pathIndex];
+        this.x = startPos.x;
+        this.y = startPos.y;
+        
+        this.dead = false;
+        this.state = 'move'; // move, attack
+        this.attackTimer = 0;
+        this.radius = 15;
+    }
+
+    distanceTo(x, y) {
+        return Math.hypot(this.x - x, this.y - y);
+    }
+
+    update(dt, allUnits) {
+        if (this.dead) return;
+
+        // 1. 索敵 (尋找射程內最近的敵人)
+        let target = null;
+        let minDist = Infinity;
+
+        for (let u of allUnits) {
+            if (u.side !== this.side && !u.dead) {
+                const d = this.distanceTo(u.x, u.y);
+                if (d < this.stats.range && d < minDist) {
+                    minDist = d;
+                    target = u;
+                }
+            }
+        }
+
+        if (target) {
+            // 進入戰鬥狀態
+            this.state = 'attack';
+            this.attackTimer += dt;
+            if (this.attackTimer > 1000) { // 攻擊速度 (目前固定1秒一下，可修改)
+                target.takeDamage(this.stats.atk);
+                this.attackTimer = 0;
+            }
+        } else {
+            // 移動狀態
+            this.state = 'move';
+            this.move(dt);
+        }
+    }
+
+    move(dt) {
+        if (this.targetIndex < 0 || this.targetIndex >= this.path.length) return; // 到盡頭了
+
+        const targetPos = this.path[this.targetIndex];
+        const dx = targetPos.x - this.x;
+        const dy = targetPos.y - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < 5) {
+            // 到達該路徑點，切換下一個
+            this.pathIndex = this.targetIndex;
+            if (this.side === 'enemy') {
+                this.targetIndex++;
+            } else {
+                this.targetIndex--;
+            }
+        } else {
+            // 移動
+            const moveStep = this.stats.speed * (dt / 16) * 1.5; // 調速
+            this.x += (dx / dist) * moveStep;
+            this.y += (dy / dist) * moveStep;
+        }
+    }
+
+    takeDamage(amount) {
+        this.currentHp -= amount;
+        if (this.currentHp <= 0) {
+            this.dead = true;
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 血條
+        const hpPercent = this.currentHp / this.stats.hp;
+        ctx.fillStyle = 'red';
+        ctx.fillRect(-15, -25, 30, 4);
+        ctx.fillStyle = '#0f0';
+        ctx.fillRect(-15, -25, 30 * hpPercent, 4);
+
+        // 繪製單位 (如果有圖片載入成功)
+        const img = images[this.stats.id];
+        if (img && img.complete && img.naturalHeight !== 0) {
+            // 根據單位大小調整
+            const size = this.stats.isBoss ? 80 : 40;
+            ctx.drawImage(img, -size/2, -size/2, size, size);
+        } else {
+            // 圖片沒載入時用色球代替
+            ctx.fillStyle = this.stats.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI*2);
+            ctx.fill();
+            // 標示方向
+            ctx.fillStyle = '#fff';
+            ctx.fillText(this.side === 'enemy' ? 'E' : 'F', -4, 4);
+        }
+
+        ctx.restore();
+    }
+}
+
+// 啟動遊戲
+const game = new Game();
+
+</script>
+</body>
+</html>
