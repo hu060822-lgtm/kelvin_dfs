@@ -80,23 +80,23 @@ const CONFIG = {
     pathWidth: 40
 };
 
-// 圖片資源對映 (請將你的圖片放入 images 資料夾並對應檔名)
+// 圖片資源對映 (現在圖片直接放在根目錄)
 const ASSETS = {
-    // 我方單位 (Faraway Kingdom)
+    // 我方單位
     friendlies: [
-        { id: 'f1', name: '屁眼民兵', img: 'images/hero_1.png', color: '#00ccff', hp: 50, atk: 5, range: 30, speed: 1.5, weight: 40 }, // 高機率
-        { id: 'f2', name: '阿育弓手', img: 'images/hero_2.png', color: '#0088ff', hp: 40, atk: 15, range: 120, speed: 1.2, weight: 25 },
-        { id: 'f3', name: '括約肌騎士', img: 'images/hero_3.png', color: '#0044ff', hp: 150, atk: 8, range: 30, speed: 1.0, weight: 20 },
-        { id: 'f4', name: '通暢法師', img: 'images/hero_4.png', color: '#8800ff', hp: 60, atk: 30, range: 100, speed: 0.8, weight: 10 },
-        { id: 'f5', name: '國王紘', img: 'images/hero_5.png', color: 'gold',     hp: 300, atk: 50, range: 40, speed: 0.5, weight: 5 }  // SSR
+        { id: 'f1', name: '屁屁民兵', img: 'hero_1.png', color: '#00ccff', hp: 50, atk: 5, range: 30, speed: 1.5, weight: 40 },
+        { id: 'f2', name: '直腸弓手', img: 'hero_2.png', color: '#0088ff', hp: 40, atk: 15, range: 120, speed: 1.2, weight: 25 },
+        { id: 'f3', name: '括約肌騎士', img: 'hero_3.png', color: '#0044ff', hp: 150, atk: 8, range: 30, speed: 1.0, weight: 20 },
+        { id: 'f4', name: '通暢法師', img: 'hero_4.png', color: '#8800ff', hp: 60, atk: 30, range: 100, speed: 0.8, weight: 10 },
+        { id: 'f5', name: '國王本人', img: 'hero_5.png', color: 'gold',     hp: 300, atk: 50, range: 40, speed: 0.5, weight: 5 }
     ],
-    // 敵方單位 (Kelvin's Army)
+    // 敵方單位
     enemies: [
-        { id: 'e1', name: '克爾文小兵', img: 'images/enemy_1.png', color: '#ff8888', hp: 40, atk: 5, range: 30, speed: 1.0, reward: 10 },
-        { id: 'e2', name: '克爾文斥侯',   img: 'images/enemy_2.png', color: '#ff5555', hp: 30, atk: 8, range: 30, speed: 2.5, reward: 15 },
-        { id: 'e3', name: '重裝克爾文',   img: 'images/enemy_3.png', color: '#cc0000', hp: 120, atk: 10, range: 30, speed: 0.7, reward: 30 },
-        { id: 'e4', name: '克爾文術士',   img: 'images/enemy_4.png', color: '#880000', hp: 50, atk: 20, range: 110, speed: 0.8, reward: 40 },
-        { id: 'boss', name: '克爾文大帝', img: 'images/boss.png',   color: '#000000', hp: 1000, atk: 80, range: 50, speed: 0.4, reward: 500, isBoss: true }
+        { id: 'e1', name: '克爾文小兵', img: 'enemy_1.png', color: '#ff8888', hp: 40, atk: 5, range: 30, speed: 1.0, reward: 10 },
+        { id: 'e2', name: '高速斥侯',   img: 'enemy_2.png', color: '#ff5555', hp: 30, atk: 8, range: 30, speed: 2.5, reward: 15 },
+        { id: 'e3', name: '重裝步兵',   img: 'enemy_3.png', color: '#cc0000', hp: 120, atk: 10, range: 30, speed: 0.7, reward: 30 },
+        { id: 'e4', name: '邪惡術士',   img: 'enemy_4.png', color: '#880000', hp: 50, atk: 20, range: 110, speed: 0.8, reward: 40 },
+        { id: 'boss', name: '克爾文大帝', img: 'boss.png',   color: '#000000', hp: 1000, atk: 80, range: 50, speed: 0.4, reward: 500, isBoss: true }
     ]
 };
 
