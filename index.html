@@ -2,518 +2,193 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>屁眼王國：克爾文入侵 - 終極 RTS</title>
+    <title>老闆的壓迫：極限彈幕遊戲</title>
     <style>
-        :root { --primary: #ffcc00; --bg: #111; --sidebar: #222; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; }
-        
-        /* 遊戲畫布 */
-        canvas { background: #2d3436; cursor: crosshair; flex-grow: 1; }
-
-        /* 右側控制台 (Ra2 風格) */
-        #control-panel {
-            width: 250px; background: var(--sidebar); border-left: 4px solid #444;
-            display: flex; flex-direction: column; padding: 10px; box-sizing: border-box;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-        }
-
-        .section-title { font-size: 14px; color: var(--primary); margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 3px; }
-        
-        /* 資源顯示 */
-        #resource-bar { background: #000; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #555; }
-        .stat { font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; }
-
-        /* 按鈕網格 */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .card {
-            background: #333; border: 2px solid #555; padding: 5px; cursor: pointer;
-            text-align: center; position: relative; transition: 0.2s;
-        }
-        .card:hover { border-color: var(--primary); background: #444; }
-        .card:active { transform: scale(0.95); }
-        .card img { width: 40px; height: 40px; display: block; margin: 0 auto; background: #222; }
-        .card .name { font-size: 11px; margin-top: 4px; display: block; overflow: hidden; white-space: nowrap; }
-        .card .price { font-size: 12px; color: var(--primary); font-weight: bold; }
-        
-        /* 建造冷卻遮罩 */
-        .cooldown {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); height: 0%; transition: height 0.1s linear;
-        }
-
-        #msg-box { height: 100px; background: #000; font-size: 12px; padding: 5px; color: #aaa; overflow-y: auto; border: 1px solid #444; }
-        .build-mode-hint { 
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 0, 0, 0.8); padding: 10px 20px; border-radius: 20px;
-            display: none; pointer-events: none; animation: blink 1s infinite;
-        }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
+        canvas { display: block; margin: 0 auto; background: #111; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; }
+        .hero-select { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+        .hero-card { border: 2px solid #555; padding: 10px; cursor: pointer; transition: 0.3s; width: 120px; }
+        .hero-card:hover { border-color: #fff; background: #222; }
+        .hero-card img { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; }
+        .hidden { display: none; }
+        #hud { position: absolute; top: 10px; left: 10px; pointer-events: none; }
+        #skill-bar { width: 200px; height: 10px; background: #333; margin-top: 5px; }
+        #skill-fill { width: 100%; height: 100%; background: #0cf; transition: 0.1s; }
     </style>
 </head>
 <body>
 
-<div id="build-hint" class="build-mode-hint">建造模式：點擊地圖放置建築 (按 ESC 取消)</div>
-
-<canvas id="gameCanvas"></canvas>
-
-<div id="control-panel">
-    <div id="resource-bar">
-        <div class="stat"><span>💰 金幣:</span> <span id="gold-val">500</span></div>
-        <div class="stat" style="color:#00d1b2;"><span>🏰 基地:</span> <span id="hp-val">100%</span></div>
+    <div id="hud" class="hidden">
+        <div>HP: <span id="hp-val">3</span></div>
+        <div>SKILL (SPACE):</div>
+        <div id="skill-bar"><div id="skill-fill"></div></div>
     </div>
 
-    <div class="section-title">單位召喚 (Units)</div>
-    <div class="grid" id="unit-grid">
+    <div id="ui">
+        <h1>老闆的壓迫：極限彈幕</h1>
+        <p>選擇你的英雄進入戰場</p>
+        <div class="hero-select">
+            <div class="hero-card" onclick="startGame('hero_1', '護盾')">
+                <img src="hero_1.jpg">
+                <p>工程師<br><small>技能：護盾</small></p>
+            </div>
+            <div class="hero-card" onclick="startGame('hero_2', '子彈時間')">
+                <img src="hero_2.jpg">
+                <p>眼鏡兄<br><small>技能：時間緩速</small></p>
+            </div>
+            <div class="hero-card" onclick="startGame('hero_3', '追蹤雷射')">
+                <img src="hero_3.jpg">
+                <p>大頭<br><small>技能：全彈發射</small></p>
+            </div>
+            <div class="hero-card" onclick="startGame('hero_4', '瞬移')">
+                <img src="hero_4.jpg">
+                <p>微笑哥<br><small>技能：隨機閃現</small></p>
+            </div>
+            <div class="hero-card" onclick="startGame('hero_5', '淨化')">
+                <img src="hero_5.png">
+                <p>墨鏡男<br><small>技能：全屏清除</small></p>
+            </div>
         </div>
+    </div>
 
-    <div class="section-title">防禦工事 (Structures)</div>
-    <div class="grid" id="struct-grid">
-        </div>
+    <canvas id="gameCanvas"></canvas>
 
-    <div class="section-title">戰報系統</div>
-    <div id="msg-box">遊戲初始化中...</div>
-</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 800;
 
-<script>
-/** * ------------------------------------------------------------------
- * 1. 全域配置與資料 (Config & Database)
- * ------------------------------------------------------------------
- */
-const CONFIG = {
-    FPS: 60,
-    INITIAL_GOLD: 500,
-    BASE_HP: 2000,
-    GOLD_PER_TICK: 1,
-    GRID_SIZE: 40,
-    PATH_COUNT: 2 // 路徑數量
-};
+        let gameActive = false;
+        let player, boss, bullets = [], particles = [], frame = 0;
+        let keys = {};
+        let skillCooldown = 0;
 
-const ASSETS_DATA = {
-    friendlies: [
-        { id: 'f1', name: '屁屁民兵', img: 'hero_1.png', hp: 80, atk: 10, range: 45, speed: 1.2, cost: 50, type: 'melee' },
-        { id: 'f2', name: '直腸弓手', img: 'hero_2.png', hp: 50, atk: 15, range: 200, speed: 1.0, cost: 120, type: 'ranged' },
-        { id: 'f3', name: '括約肌騎士', img: 'hero_3.png', hp: 250, atk: 12, range: 45, speed: 0.8, cost: 250, type: 'tank' },
-        { id: 'f4', name: '通暢法師', img: 'hero_4.png', hp: 70, atk: 45, range: 150, speed: 0.7, cost: 400, type: 'mage' },
-        { id: 'f5', name: '國王本人', img: 'hero_5.png', hp: 800, atk: 100, range: 60, speed: 0.5, cost: 1200, type: 'hero' }
-    ],
-    enemies: [
-        { id: 'e1', name: '克爾文小兵', img: 'enemy_1.png', hp: 60, atk: 8, range: 45, speed: 0.9, reward: 15 },
-        { id: 'e2', name: '高速斥侯', img: 'enemy_2.png', hp: 40, atk: 12, range: 40, speed: 2.2, reward: 20 },
-        { id: 'e3', name: '重裝步兵', img: 'enemy_3.png', hp: 200, atk: 15, range: 45, speed: 0.6, reward: 40 },
-        { id: 'e4', name: '邪惡術士', img: 'enemy_4.png', hp: 80, atk: 30, range: 130, speed: 0.8, reward: 60 },
-        { id: 'boss', name: '克爾文大帝', img: 'boss.png', hp: 3000, atk: 120, range: 70, speed: 0.4, reward: 1000, isBoss: true }
-    ],
-    structures: [
-        { id: 't1', name: '箭樓', img: 'tower_arrow.png', hp: 300, atk: 20, range: 250, cost: 300, type: 'turret', cd: 1000 },
-        { id: 't2', name: '法師塔', img: 'tower_mage.png', hp: 250, atk: 50, range: 180, cost: 500, type: 'turret', cd: 2000 },
-        { id: 'w1', name: '城牆', img: 'wall.png', hp: 1000, atk: 0, range: 0, cost: 100, type: 'wall' },
-        { id: 'm1', name: '地雷', img: 'mine.png', hp: 1, atk: 300, range: 50, cost: 150, type: 'mine' },
-        { id: 'h1', name: '拒馬', img: 'trap.png', hp: 200, atk: 5, range: 30, cost: 80, type: 'trap' }
-    ]
-};
-
-// 資源管理器：預載入並處理 404
-const Images = {};
-let loadedCount = 0;
-const totalAssets = ASSETS_DATA.friendlies.length + ASSETS_DATA.enemies.length + ASSETS_DATA.structures.length;
-
-function preloadImages() {
-    const all = [...ASSETS_DATA.friendlies, ...ASSETS_DATA.enemies, ...ASSETS_DATA.structures];
-    all.forEach(data => {
-        const img = new Image();
-        img.src = data.img;
-        img.onload = () => { loadedCount++; };
-        img.onerror = () => {
-            console.error(`無法載入圖片: ${data.img}，請確認檔案在根目錄且檔名正確。`);
-            loadedCount++; // 即使報錯也繼續，避免卡死
+        const images = {
+            boss: 'boss.jpg',
+            enemies: ['enemy_1.jpg', 'enemy_2.jpg', 'enemy_3.png', 'enemy_4.jpg']
         };
-        Images[data.id] = img;
-    });
-}
 
-/** * ------------------------------------------------------------------
- * 2. 遊戲引擎核心 (Game Engine)
- * ------------------------------------------------------------------
- */
-class GameEngine {
-    constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.resize();
-
-        this.gold = CONFIG.INITIAL_GOLD;
-        this.baseHp = CONFIG.BASE_HP;
-        this.units = [];
-        this.enemies = [];
-        this.structures = [];
-        this.projectiles = [];
-        this.particles = [];
-        
-        this.paths = this.createMultiplePaths();
-        this.buildMode = null;
-        this.frameCount = 0;
-        this.isGameOver = false;
-
-        this.initUI();
-        window.addEventListener('resize', () => this.resize());
-        this.canvas.addEventListener('click', (e) => this.handleMouseClick(e));
-        window.addEventListener('keydown', (e) => { if(e.key === 'Escape') this.cancelBuild(); });
-
-        preloadImages();
-        requestAnimationFrame((t) => this.mainLoop(t));
-        
-        this.log("遙遠的屁眼王國：大戰開幕！");
-    }
-
-    resize() {
-        this.canvas.width = window.innerWidth - 250;
-        this.canvas.height = window.innerHeight;
-    }
-
-    createMultiplePaths() {
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        // 路徑 1: 上方蜿蜒
-        const p1 = [
-            {x: 50, y: h*0.2}, {x: w*0.4, y: h*0.2}, {x: w*0.4, y: h*0.5}, {x: w*0.1, y: h*0.5}, {x: w*0.1, y: h*0.8}, {x: w*0.9, y: h*0.8}
-        ];
-        // 路徑 2: 下方蜿蜒
-        const p2 = [
-            {x: 50, y: h*0.1}, {x: w*0.8, y: h*0.1}, {x: w*0.8, y: h*0.4}, {x: w*0.5, y: h*0.4}, {x: w*0.5, y: h*0.8}, {x: w*0.9, y: h*0.8}
-        ];
-        return [p1, p2];
-    }
-
-    initUI() {
-        const uGrid = document.getElementById('unit-grid');
-        ASSETS_DATA.friendlies.forEach(u => {
-            const el = document.createElement('div');
-            el.className = 'card';
-            el.innerHTML = `<img src="${u.img}"><span class="name">${u.name}</span><span class="price">$${u.cost}</span>`;
-            el.onclick = () => this.spawnFriendly(u.id);
-            uGrid.appendChild(el);
+        const bossImg = new Image(); bossImg.src = images.boss;
+        const enemyImgs = images.enemies.map(src => {
+            const img = new Image(); img.src = src; return img;
         });
 
-        const sGrid = document.getElementById('struct-grid');
-        ASSETS_DATA.structures.forEach(s => {
-            const el = document.createElement('div');
-            el.className = 'card';
-            el.innerHTML = `<img src="${s.img}"><span class="name">${s.name}</span><span class="price">$${s.cost}</span>`;
-            el.onclick = () => this.enterBuildMode(s.id);
-            sGrid.appendChild(el);
-        });
-    }
-
-    log(msg) {
-        const box = document.getElementById('msg-box');
-        box.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + box.innerHTML;
-    }
-
-    spawnFriendly(id) {
-        const data = ASSETS_DATA.friendlies.find(x => x.id === id);
-        if (this.gold >= data.cost) {
-            this.gold -= data.cost;
-            const pathIdx = Math.floor(Math.random() * this.paths.length);
-            this.units.push(new Unit(data, 'friendly', this.paths[pathIdx], true));
-            this.log(`召喚了 ${data.name}`);
-        } else {
-            this.log("金幣不足！");
-        }
-    }
-
-    enterBuildMode(id) {
-        this.buildMode = ASSETS_DATA.structures.find(x => x.id === id);
-        document.getElementById('build-hint').style.display = 'block';
-    }
-
-    cancelBuild() {
-        this.buildMode = null;
-        document.getElementById('build-hint').style.display = 'none';
-    }
-
-    handleMouseClick(e) {
-        if (!this.buildMode) return;
-        if (this.gold >= this.buildMode.cost) {
-            this.gold -= this.buildMode.cost;
-            this.structures.push(new Structure(e.offsetX, e.offsetY, this.buildMode));
-            this.log(`建造了 ${this.buildMode.name}`);
-            if (!e.shiftKey) this.cancelBuild();
-        }
-    }
-
-    spawnEnemy() {
-        const timer = this.frameCount / 60;
-        let p = 0.01 + (timer * 0.0001); // 難度隨時間增加
-        if (Math.random() < p) {
-            const type = (timer > 100 && Math.random() < 0.05) ? ASSETS_DATA.enemies[4] : ASSETS_DATA.enemies[Math.floor(Math.random()*4)];
-            const pathIdx = Math.floor(Math.random() * this.paths.length);
-            this.enemies.push(new Unit(type, 'enemy', this.paths[pathIdx], false));
-        }
-    }
-
-    update() {
-        if (this.isGameOver) return;
-        this.frameCount++;
-        if (this.frameCount % 60 === 0) this.gold += CONFIG.GOLD_PER_TICK;
-
-        this.spawnEnemy();
-
-        // 更新單位
-        this.units.forEach(u => u.update(this));
-        this.enemies.forEach(e => e.update(this));
-        this.structures.forEach(s => s.update(this));
-        this.projectiles.forEach(p => p.update(this));
-
-        // 基地判定
-        this.enemies.forEach(e => {
-            if (e.isAtEnd) {
-                this.baseHp -= e.atk;
-                e.hp = 0;
-                this.log(`⚠️ 基地遭到攻擊！`);
+        class Entity {
+            constructor(x, y, radius, img) {
+                this.x = x; this.y = y; this.radius = radius; this.img = img;
             }
-        });
-
-        // 移除死亡對象
-        this.units = this.units.filter(u => u.hp > 0);
-        this.enemies = this.enemies.filter(e => {
-            if (e.hp <= 0 && !e.isAtEnd) this.gold += e.reward;
-            return e.hp > 0;
-        });
-        this.projectiles = this.projectiles.filter(p => !p.dead);
-        this.structures = this.structures.filter(s => s.hp > 0);
-
-        // UI 更新
-        document.getElementById('gold-val').innerText = Math.floor(this.gold);
-        document.getElementById('hp-val').innerText = Math.max(0, Math.ceil((this.baseHp/CONFIG.BASE_HP)*100)) + "%";
-
-        if (this.baseHp <= 0) {
-            this.isGameOver = true;
-            this.log("💀 王國淪陷... 克爾文大獲全勝。");
+            draw() {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                ctx.clip();
+                ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius*2, this.radius*2);
+                ctx.restore();
+            }
         }
-    }
 
-    draw() {
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // 畫路徑
-        ctx.setLineDash([10, 10]);
-        ctx.strokeStyle = "#444";
-        ctx.lineWidth = 2;
-        this.paths.forEach(path => {
-            ctx.beginPath();
-            ctx.moveTo(path[0].x, path[0].y);
-            path.forEach(pt => ctx.lineTo(pt.x, pt.y));
-            ctx.stroke();
+        function startGame(heroId, skillName) {
+            document.getElementById('ui').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
             
-            // 畫路徑節點 (起點與終點)
-            ctx.fillStyle = "#ff4444"; ctx.fillRect(path[0].x-10, path[0].y-10, 20, 20);
-            ctx.fillStyle = "#4444ff"; ctx.fillRect(path[path.length-1].x-15, path[path.length-1].y-15, 30, 30);
-        });
-        ctx.setLineDash([]);
-
-        this.structures.forEach(s => s.draw(ctx));
-        this.units.forEach(u => u.draw(ctx));
-        this.enemies.forEach(e => e.draw(ctx));
-        this.projectiles.forEach(p => p.draw(ctx));
-
-        // 建造預覽
-        if (this.buildMode) {
-            ctx.globalAlpha = 0.5;
-            ctx.fillStyle = "green";
-            ctx.beginPath();
-            // 這裡簡化處理，滑鼠位置透過一個全域變數獲取會更好，這邊用 canvas 監聽
+            const pImg = new Image(); pImg.src = heroId + (heroId === 'hero_5' ? '.png' : '.jpg');
+            player = new Entity(400, 700, 20, pImg);
+            player.hp = 3;
+            player.skill = skillName;
+            
+            boss = new Entity(400, 150, 80, bossImg);
+            boss.hp = 1000;
+            
+            gameActive = true;
+            animate();
         }
-        ctx.globalAlpha = 1.0;
-    }
 
-    mainLoop() {
-        this.update();
-        this.draw();
-        requestAnimationFrame(() => this.mainLoop());
-    }
-}
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
 
-/** * ------------------------------------------------------------------
- * 3. 戰鬥實體類別 (Units, Structures, Projectiles)
- * ------------------------------------------------------------------
- */
-class Unit {
-    constructor(data, side, path, isFriendly) {
-        this.id = data.id;
-        this.name = data.name;
-        this.hp = data.hp;
-        this.maxHp = data.hp;
-        this.atk = data.atk;
-        this.range = data.range;
-        this.speed = data.speed;
-        this.reward = data.reward || 0;
-        this.side = side;
-        this.path = path;
-        this.isFriendly = isFriendly;
-        
-        this.pIdx = isFriendly ? path.length - 1 : 0;
-        this.targetIdx = isFriendly ? this.pIdx - 1 : this.pIdx + 1;
-        this.x = path[this.pIdx].x;
-        this.y = path[this.pIdx].y;
-        
-        this.isAtEnd = false;
-        this.atkCooldown = 0;
-    }
+        function spawnBullet(x, y, vx, vy, type) {
+            bullets.push({ x, y, vx, vy, radius: 10, img: enemyImgs[Math.floor(Math.random()*4)] });
+        }
 
-    update(engine) {
-        if (this.hp <= 0) return;
+        function useSkill() {
+            if (skillCooldown > 0) return;
+            skillCooldown = 500; // 500 frames cooldown
 
-        // 1. 索敵 (找最近的敵人)
-        let targets = this.isFriendly ? engine.enemies : engine.units;
-        let nearest = null;
-        let minDist = this.range;
+            if (player.skill === '全屏清除') bullets = [];
+            if (player.skill === '護盾') player.invincible = 180; // 3 seconds
+            if (player.skill === '隨機閃現') { player.x = Math.random()*800; player.y = Math.random()*800; }
+        }
 
-        targets.forEach(t => {
-            const d = Math.hypot(t.x - this.x, t.y - this.y);
-            if (d < minDist) {
-                minDist = d;
-                nearest = t;
+        function update() {
+            if (keys['ArrowUp'] && player.y > 0) player.y -= 5;
+            if (keys['ArrowDown'] && player.y < 800) player.y += 5;
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= 5;
+            if (keys['ArrowRight'] && player.x < 800) player.x += 5;
+            if (keys['Space']) useSkill();
+
+            if (skillCooldown > 0) skillCooldown--;
+            if (player.invincible > 0) player.invincible--;
+            document.getElementById('skill-fill').style.width = (1 - skillCooldown/500)*100 + '%';
+
+            // Boss AI & Patterns
+            frame++;
+            boss.x = 400 + Math.sin(frame/50) * 200;
+
+            // Pattern 1: Spiral
+            if (frame % 5 === 0) {
+                let angle = frame / 10;
+                spawnBullet(boss.x, boss.y, Math.cos(angle)*4, Math.sin(angle)*4);
             }
-        });
 
-        // 2. 戰鬥或移動
-        if (nearest) {
-            if (this.atkCooldown <= 0) {
-                // 發射彈幕或直接傷害
-                if (this.id === 'f2' || this.id === 'f4' || this.id === 'e4') {
-                    engine.projectiles.push(new Projectile(this.x, this.y, nearest, this.atk, this.side));
-                } else {
-                    nearest.hp -= this.atk;
+            // Pattern 2: Heavy Rain (Difficulty)
+            if (frame % 20 === 0) {
+                for(let i=0; i<8; i++) spawnBullet(Math.random()*800, 0, 0, 3 + Math.random()*5);
+            }
+
+            bullets.forEach((b, index) => {
+                b.x += b.vx;
+                b.y += b.vy;
+
+                // Collision Detection
+                let dist = Math.hypot(player.x - b.x, player.y - b.y);
+                if (dist < player.radius + b.radius && !player.invincible) {
+                    player.hp--;
+                    document.getElementById('hp-val').innerText = player.hp;
+                    bullets.splice(index, 1);
+                    if (player.hp <= 0) location.reload();
                 }
-                this.atkCooldown = 60; // 1秒攻速
-            }
-        } else {
-            this.move();
-        }
-
-        if (this.atkCooldown > 0) this.atkCooldown--;
-    }
-
-    move() {
-        const tgt = this.path[this.targetIdx];
-        if (!tgt) {
-            this.isAtEnd = true;
-            return;
-        }
-
-        const dx = tgt.x - this.x;
-        const dy = tgt.y - this.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist < 2) {
-            this.pIdx = this.targetIdx;
-            this.targetIdx += (this.isFriendly ? -1 : 1);
-            if (this.targetIdx < 0 || this.targetIdx >= this.path.length) {
-                this.isAtEnd = true;
-            }
-        } else {
-            this.x += (dx / dist) * this.speed;
-            this.y += (dy / dist) * this.speed;
-        }
-    }
-
-    draw(ctx) {
-        const img = Images[this.id];
-        if (img && img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, this.x - 20, this.y - 20, 40, 40);
-        } else {
-            // 沒圖片時顯示 debug 資訊
-            ctx.fillStyle = this.isFriendly ? "#3498db" : "#e74c3c";
-            ctx.beginPath(); ctx.arc(this.x, this.y, 15, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "white"; ctx.font = "10px Arial";
-            ctx.fillText(this.name, this.x - 20, this.y - 20);
-        }
-        // 血條
-        ctx.fillStyle = "black"; ctx.fillRect(this.x - 15, this.y - 25, 30, 4);
-        ctx.fillStyle = "lime"; ctx.fillRect(this.x - 15, this.y - 25, 30 * (this.hp / this.maxHp), 4);
-    }
-}
-
-class Structure {
-    constructor(x, y, data) {
-        this.id = data.id;
-        this.name = data.name;
-        this.x = x; this.y = y;
-        this.hp = data.hp;
-        this.maxHp = data.hp;
-        this.atk = data.atk;
-        this.range = data.range;
-        this.type = data.type;
-        this.atkCD = data.cd || 0;
-        this.timer = 0;
-    }
-
-    update(engine) {
-        if (this.type === 'turret') {
-            this.timer++;
-            if (this.timer >= this.atkCD/16) {
-                let target = engine.enemies.find(e => Math.hypot(e.x - this.x, e.y - this.y) < this.range);
-                if (target) {
-                    engine.projectiles.push(new Projectile(this.x, this.y, target, this.atk, 'friendly'));
-                    this.timer = 0;
-                }
-            }
-        }
-        if (this.type === 'mine') {
-            engine.enemies.forEach(e => {
-                if (Math.hypot(e.x - this.x, e.y - this.y) < this.range) {
-                    e.hp -= this.atk;
-                    this.hp = 0; // 自爆
-                }
+                if (b.y > 850 || b.y < -50 || b.x > 850 || b.x < -50) bullets.splice(index, 1);
             });
         }
-    }
 
-    draw(ctx) {
-        const img = Images[this.id];
-        if (img && img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, this.x - 20, this.y - 20, 40, 40);
-        } else {
-            ctx.fillStyle = "#95a5a6"; ctx.fillRect(this.x-20, this.y-20, 40, 40);
-            ctx.fillStyle = "white"; ctx.font = "10px Arial"; ctx.fillText(this.name, this.x-20, this.y-25);
+        function animate() {
+            if (!gameActive) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            update();
+            
+            // Draw Boss HP Bar
+            ctx.fillStyle = 'red';
+            ctx.fillRect(100, 20, 600, 10);
+            
+            boss.draw();
+            player.draw();
+            if (player.invincible > 0) {
+                ctx.strokeStyle = 'cyan'; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.arc(player.x, player.y, player.radius + 5, 0, Math.PI*2); ctx.stroke();
+            }
+
+            bullets.forEach(b => {
+                ctx.save();
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.clip();
+                ctx.drawImage(b.img, b.x - b.radius, b.y - b.radius, b.radius*2, b.radius*2);
+                ctx.restore();
+            });
+
+            requestAnimationFrame(animate);
         }
-    }
-}
-
-class Projectile {
-    constructor(x, y, target, damage, side) {
-        this.x = x; this.y = y;
-        this.target = target;
-        this.damage = damage;
-        this.speed = 5;
-        this.dead = false;
-        this.side = side;
-    }
-
-    update() {
-        if (this.target.hp <= 0) { this.dead = true; return; }
-        const dx = this.target.x - this.x;
-        const dy = this.target.y - this.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 5) {
-            this.target.hp -= this.damage;
-            this.dead = true;
-        } else {
-            this.x += (dx / dist) * this.speed;
-            this.y += (dy / dist) * this.speed;
-        }
-    }
-
-    draw(ctx) {
-        ctx.fillStyle = this.side === 'friendly' ? "yellow" : "purple";
-        ctx.beginPath(); ctx.arc(this.x, this.y, 4, 0, Math.PI*2); ctx.fill();
-    }
-}
-
-// 啟動遊戲引擎
-const game = new GameEngine();
-
-</script>
+    </script>
 </body>
 </html>
