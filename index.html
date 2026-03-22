@@ -3,204 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft 成就大挑戰</title>
-    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <title>岩壁群：30題核心成員測驗</title>
     <style>
         :root {
-            --mc-green: #5AA73E;
-            --mc-dirt: #795548;
-            --mc-stone: #313131;
-            --mc-white: #f0f0f0;
+            --pink-light: #fff0f3;
+            --pink-main: #ffc1cc;
+            --pink-dark: #ff8fa3;
+            --text: #4a4a4a;
         }
-
         body {
-            background-color: #1e1e1e;
-            color: white;
-            font-family: 'ZCOOL KuaiLe', 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            background-color: var(--pink-light);
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
-
-        #game-container {
-            background-color: var(--mc-stone);
-            border: 4px solid #000;
-            padding: 20px;
+        #quiz-card {
+            background: white;
             width: 90%;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(255, 143, 163, 0.2);
+            border: 3px solid var(--pink-main);
         }
-
-        .header {
-            color: var(--mc-green);
-            font-size: 2rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px #000;
-        }
-
-        .score-board {
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-        }
-
-        .question-box {
-            background: #4a4a4a;
-            padding: 15px;
-            border: 2px solid #fff;
-            margin-bottom: 20px;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .btn {
-            background-color: var(--mc-dirt);
-            border: 3px solid #000;
-            color: white;
-            padding: 15px 10px;
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: var(--pink-dark); font-size: 1.5rem; margin: 0; }
+        .progress { font-size: 0.9rem; color: #999; margin-top: 5px; }
+        .question-text { font-size: 1.1rem; font-weight: bold; margin: 20px 0; min-height: 60px; line-height: 1.5; }
+        .options-list { display: grid; gap: 10px; }
+        .option-btn {
+            background: white;
+            border: 2px solid var(--pink-main);
+            padding: 12px 15px;
+            border-radius: 12px;
             cursor: pointer;
-            font-family: inherit;
-            transition: all 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-align: left;
+            transition: 0.2s;
+            font-size: 1rem;
         }
-
-        .btn:hover {
-            background-color: #8d6e63;
-            transform: scale(1.02);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .correct { background-color: var(--mc-green) !important; }
-        .wrong { background-color: #ff5555 !important; }
-
-        #next-btn {
-            margin-top: 20px;
-            padding: 10px 30px;
-            background: #5555ff;
-            display: none;
+        .option-btn:hover { background: var(--pink-light); border-color: var(--pink-dark); }
+        .option-btn.correct { background: #d1f7d1; border-color: #2ecc71; }
+        .option-btn.wrong { background: #ffdada; border-color: #ff4757; }
+        #result-area { display: none; text-align: center; }
+        .score-display { font-size: 3rem; font-weight: bold; color: var(--pink-dark); margin: 20px 0; }
+        .reload-btn {
+            background: var(--pink-dark);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div class="header">MC 成就挑戰</div>
-        <div class="score-board">分數: <span id="score">0</span> | 剩餘生命: <span id="lives">❤❤❤</span></div>
-        
-        <div id="quiz-area">
-            <div class="question-box">
-                <h3 id="question">載入中...</h3>
-            </div>
-            <div class="options-grid" id="options">
-                </div>
+<div id="quiz-card">
+    <div id="quiz-area">
+        <div class="header">
+            <h1>🌸 岩壁群：核心成員考據 🌸</h1>
+            <div class="progress" id="progress-text">Question 1 / 30</div>
         </div>
-
-        <button id="next-btn" class="btn" onclick="nextQuestion()">下一題</button>
+        <div class="question-text" id="q-text">載入中...</div>
+        <div class="options-list" id="options-box"></div>
     </div>
 
-    <script>
-       const quizData = [
-    { q: "成就「這是一隻鳥嗎？」如何達成？", a: "使用鞘翅以超音速飛過只有 1x1 大小的空隙", o: ["使用鞘翅飛行超過 1000 米", "使用鞘翅以超音速飛過只有 1x1 大小的空隙", "從世界頂端飛到基岩層", "在鞘翅飛行時殺死一隻幻翼"] },
-    { q: "成就「成雙成對」的要求是什麼？", a: "讓每一種動物都進行過繁殖", o: ["讓兩隻羊繁殖", "讓兩隻牛繁殖", "讓每一種動物都進行過繁殖", "同時擁有所有種類的貓"] },
-    { q: "成就「終極奉獻」需要哪種工具？", a: "一柄獄髓鋤頭", o: ["一柄鑽石鎬", "一柄獄髓劍", "一柄獄髓鋤頭", "一柄附魔滿級的斧頭"] },
-    { q: "成就「這又是哪來的？」如何達成？", a: "受到界伏龍的效果影響向上飄浮 50 格", o: ["進入終界城", "受到界伏龍的效果影響向上飄浮 50 格", "殺死一隻界伏龍", "在終界城使用傳送珍珠"] },
-    { q: "成就「為什麼會變成這樣？」需要獲得？", a: "同時獲得每一種藥水與生物效果", o: ["喝下一瓶劇毒藥水", "同時獲得每一種藥水與生物效果", "同時獲得 10 種正面藥水效果", "在半顆心狀態下擊敗凋零怪"] },
-    { q: "成就「狂暴雞尾酒」與「為什麼會變成這樣？」的區別在於？", a: "後者包含了如『發光』或『界伏龍潛影』等非藥水效果", o: ["前者只需要喝下投擲藥水", "後者包含了如『發光』或『界伏龍潛影』等非藥水效果", "前者不需要包含負面效果", "兩者其實完全一樣，只是版本翻譯問題"] },
-    { q: "成就「正中紅心」的要求是在多遠距離擊中靶心？", a: "30 公尺（格）以外", o: ["20 公尺（格）以外", "30 公尺（格）以外", "50 公尺（格）以外", "100 公尺（格）以外"] },
-    { q: "成就「狙擊手的對決」要求殺死 50 米外的哪種生物？", a: "骷髏", o: ["苦力怕", "骷髏", "終界使者", "幻翼"] },
-    { q: "成就「不穩定的同盟」如何達成？", a: "將幽靈從地獄帶回主世界並殺死它", o: ["與豬布林進行交易", "將幽靈從地獄帶回主世界並殺死它", "在主世界召喚凋零怪", "讓幽靈的火球炸死一隻苦力怕"] },
-    { q: "成就「空間泡沫」要求透過地獄旅行，回到主世界哪處？", a: "距離出發點 7 公里的地方", o: ["距離出發點 1 公里的地方", "距離出發點 7 公里的地方", "距離出發點 10 公里的地方", "世界的邊界"] },
-    { q: "成就「兩鳥一石」需要用什麼武器達成？", a: "附有穿透效果的十字弓", o: ["附有力量 V 的長弓", "附有穿透效果的十字弓", "三叉戟", "獄髓劍"] },
-    { q: "成就「星際商人」要求在建築高度限制處與村民交易，高度是？", a: "319 層", o: ["256 層", "319 層", "384 層", "512 層"] },
-    { q: "成就「荒野醫生」需要對殭屍村民施加什麼？", a: "虛弱藥水與金蘋果", o: ["再生藥水與金蘋果", "虛弱藥水與普通蘋果", "虛弱藥水與金蘋果", "力量藥水與金胡蘿蔔"] },
-    { q: "成就「音效之聲」要求在什麼地方播放唱片機？", a: "草甸 (Meadow) 生物群系", o: ["森林 (Forest) 生物群系", "繁茂洞窟 (Lush Caves)", "草甸 (Meadow) 生物群系", "終界城中心"] },
-    { q: "成就「均衡飲食」要求吃下所有能吃的東西，包含？", a: "腐肉、河豚與附魔金蘋果", o: ["只有所有的熟食", "不包含生肉和腐肉", "腐肉、河豚與附魔金蘋果", "不包含有毒的東西"] },
-    { q: "成就「走在冰上」需要哪種附魔魔咒？", a: "冰行者 (Frost Walker)", o: ["深海探索者 (Depth Strider)", "冰行者 (Frost Walker)", "絲綢之觸 (Silk Touch)", "護甲穿透"] },
-    { q: "成就「當頭對面」的要求是？", a: "用幽靈的火球殺死幽靈自己", o: ["用劍格擋火球", "用幽靈的火球殺死幽靈自己", "在幽靈發射前殺死它", "用弓箭射中幽靈的頭"] },
-    { q: "成就「生日快樂」要求哪種生物幫你丟蛋糕？", a: "悅靈 (Allay)", o: ["村民 (Villager)", "悅靈 (Allay)", "鸚鵡 (Parrot)", "狐狸 (Fox)"] },
-    { q: "成就「戰略性捕魚」要求用什麼捕魚？", a: "水桶", o: ["釣魚竿", "三叉戟", "水桶", "手動擊殺"] },
-    { q: "成就「在此避難」要求進入哪種結構？", a: "堡壘遺跡 (Bastion Remnant)", o: ["要塞 (Stronghold)", "林地府邸 (Woodland Mansion)", "地獄要塞 (Nether Fortress)", "堡壘遺跡 (Bastion Remnant)"] }
+    <div id="result-area">
+        <h1>測驗結束！</h1>
+        <div class="score-display" id="final-score">0</div>
+        <p id="rank-msg"></p>
+        <button class="reload-btn" onclick="location.reload()">再戰一次</button>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    { q: "一尾熊發布的「國軍招募文案」中，最後提到要收留哪種男孩？", o: ["學測心碎男孩", "被當心碎男孩", "失戀心碎男孩", "錢包遺失男孩"], a: 0 },
+    { q: "四尾熊在討論區突然提到「明天中午我就要回...」，目的地是哪裡？", o: ["沙鹿", "一中街", "梧棲", "學餐"], a: 2 },
+    { q: "二尾熊曾叮囑哪一個人的名字「不能讓他看到」對話內容？", o: ["呂宗承", "林星辰", "張紘瑞", "宋述翔"], a: 0 },
+    { q: "在「出遊討論區」頻道，六尾熊問了火車時間，請問是幾點的火車？", o: ["八點二十三", "七點四十三分", "十五點三十三分", "二十二點二十三分"], a: 1 },
+    { q: "下列哪一個暱稱**不符合**伺服器中以「尾熊」結尾的成員慣例？",a: ["二尾熊", "三尾熊", "四尾熊", "五尾熊"],a: 3},
+    { q: "誰在聊天紀錄中被指名為「熬夜亞軍」？", o: ["六尾熊", "七尾熊", "無尾熊", "二尾熊", "zheng"],  a: 0 },
+    { q: "六尾熊請大家喝完養樂多後，在群組抱怨發生了什麼事？", o: ["沒人說謝謝", "有人說不好喝", "大家都要喝第二瓶", "直接冷場沒人理"], a: 3 },
+    { q: "七尾熊排名的頂尖大學中，成大（NCKU）被排在第幾順位？", o: ["第一", "第二", "第三", "第四"], a: 3 },
+    { q: "無尾熊在「暈船仔測驗」中自爆拿了幾分？", o: ["20分", "50分", "80分", "100分"], a: 1 },
+    { q: "錫蘭的 YouTube 頻道是誰的姊姊推薦給無尾熊的？", o: ["一尾熊", "二尾熊", "六尾熊", "無尾熊"], a: 3 },
+    { q: "托沃·卡普在討論區中使用過哪一個帶有文學諧音的冷梗？", o: ["文學造脂", "詩情畫意", "岩壁之王", "學測戰士"], a: 0 },
+    { q: "六尾熊曾發布過一個關於什麼的 Google 表單統計請求？", o: ["晚餐吃什麼", "心理健康指數", "熬夜大賽", "畢業旅行意願"], a: 1 },
+    { q: "一尾熊在 2024 年 1 月貼出的「玩這個」遊戲連結是什麼？", o: ["Gartic Phone", "英雄聯盟", "Minecraft", "瓦羅蘭"], a: 0 },
+    { q: "三尾熊幫提到的「生日」預計要去進行什麼活動？", o: ["吃火鍋", "唱KTV", "吃牛排", "樹懶酒吧"], a: 2 },
+    { q: "針對「6 個人 2000 元」的價格討論，六尾熊的直白反應是什麼？", o: ["這很便宜耶", "這到底是什麼價錢", "我沒錢了", "大家平分吧"], a: 1 },
+    { q: "哪位成員在 2024年2月29日（閏年）發過訊息？", o: ["三尾熊", "六尾熊", "七尾熊", "二尾熊"], a: 3 }, },
+    { q: "二尾熊提到張紘瑞穿那件衣服去上課後，結果如何？", o: ["被老師罵", "被學妹搭訕", "有點出名了", "衣服破了"], a: 2 },
+    { q: "三尾熊在哪個對話中開玩笑建議跨年局要在「學餐」辦？", o: ["討論區", "台中人", "出遊討論區", "memes"], a: 1 },
+    { q: "一尾熊在討酒喝時問了哪句經典台詞？", o: ["我的伏特加呢", "給我一杯威士忌", "有人要喝啤酒嗎", "酒精在哪裡"], a: 0 },
+    { q: "無尾熊發送那個超級巨大的 `eat_plum` 表情符號時，當時在討論什麼？", o: ["晚餐", "學測", "完全沒有前文，純發送", "遊戲"], a: 2 },
+    { q: "三尾熊提到「想玩蔚藍檔案」是在哪一年的 5 月 20 日？", o: ["2023年", "2024年", "2025年", "2026年"], a: 0 },
+    { q: "2026/3/22 凌晨，誰被訊息標籤封為「熬夜亞軍」？", o: ["一尾熊", "二尾熊", "六尾熊", "七尾熊"], a: 2 },
+    { q: "七尾熊在 2025年11月9日 提到了哪種交換原則？", o: ["誠信交換", "等價交換", "隨機交換", "強制交換"], a: 1  },
+    { q: "七尾熊在問「今天到底是什麼局」時，是跟誰有局？", o: ["呂宗承", "六尾熊", "學長", "無尾熊"], a: 1 },
+    { q: "Kelvin 在伺服器成員中對應的「幾尾熊」暱稱是？", o: ["五尾熊", "六尾熊", "七尾熊", "八尾熊"], a: 2 },
+    { q: "二尾熊提到「林星辰」時，要他哪一杯酒？", o: ["屍體復甦者二號", "亞歷山大", "adios motherfucker", "客兄的下午茶"], a: 0 },
+    { q: "一尾熊曾在討論區中問過誰「你今天有考試嗎」？", o: ["二尾熊", "三尾熊", "六尾熊", "zheng"], a: 0 },
+    { q: "在 2025年12月1日，某人傳了一個單字「述」，是誰？", a: ["三尾熊", "一尾熊", "二尾熊", "六尾熊"], c: 0 },
+    { q: "zheng 在 2026 年 1 月對某個任務發出的指令是？", o: ["我來處理", "交給你了", "全部重寫", "明天再說"], a: 1 },
+    { q: "討論區紀錄中的最後一則訊息（2026/3/22）內容是什麼？", o: ["晚安", "我先睡了", "熬夜亞軍", "學測加油"], a: 2 }
 ];
-        let currentIdx = 0;
-        let score = 0;
-        let lives = 3;
 
-        function initQuiz() {
-            const data = quizData[currentIdx];
-            document.getElementById('question').innerText = data.q;
-            const optionsDiv = document.getElementById('options');
-            optionsDiv.innerHTML = '';
-            
-            // 打亂選項順序
-            const shuffledOptions = [...data.o].sort(() => Math.random() - 0.5);
+let currentQ = 0;
+let score = 0;
 
-            shuffledOptions.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'btn';
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(btn, opt);
-                optionsDiv.appendChild(btn);
-            });
-            document.getElementById('next-btn').style.display = 'none';
+function loadQuestion() {
+    const q = quizData[currentQ];
+    document.getElementById('progress-text').innerText = `Question ${currentQ + 1} / 30`;
+    document.getElementById('q-text').innerText = q.q;
+    const box = document.getElementById('options-box');
+    box.innerHTML = '';
+    
+    q.o.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(idx, btn);
+        box.appendChild(btn);
+    });
+}
+
+function checkAnswer(idx, btn) {
+    const correct = quizData[currentQ].a;
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.style.pointerEvents = 'none');
+
+    if (idx === correct) {
+        btn.classList.add('correct');
+        score++;
+    } else {
+        btn.classList.add('wrong');
+        btns[correct].classList.add('correct');
+    }
+
+    setTimeout(() => {
+        currentQ++;
+        if (currentQ < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
         }
+    }, 1000);
+}
 
-        function checkAnswer(btn, choice) {
-            const correct = quizData[currentIdx].a;
-            const allBtns = document.querySelectorAll('.options-grid .btn');
-            
-            allBtns.forEach(b => b.style.pointerEvents = 'none');
+function showResult() {
+    document.getElementById('quiz-area').style.display = 'none';
+    document.getElementById('result-area').style.display = 'block';
+    document.getElementById('final-score').innerText = `${score} / 30`;
+    
+    let msg = "";
+    if (score >= 28) msg = "你是岩壁群的史官吧！";
+    else if (score >= 20) msg = "核心成員認證成功！";
+    else if (score >= 10) msg = "看來你偶爾會參與垃圾話環節。";
+    else msg = "你是潛水員還是剛入群的？";
+    document.getElementById('rank-msg').innerText = msg;
+}
 
-            if (choice === correct) {
-                btn.classList.add('correct');
-                score += 10;
-                document.getElementById('score').innerText = score;
-            } else {
-                btn.classList.add('wrong');
-                lives--;
-                updateLives();
-                // 顯示正確答案
-                allBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
-            }
+loadQuestion();
+</script>
 
-            if (lives > 0) {
-                document.getElementById('next-btn').style.display = 'block';
-            } else {
-                alert("遊戲結束！最終得分：" + score);
-                location.reload();
-            }
-        }
-
-        function updateLives() {
-            document.getElementById('lives').innerText = "❤".repeat(lives);
-        }
-
-        function nextQuestion() {
-            currentIdx++;
-            if (currentIdx < quizData.length) {
-                initQuiz();
-            } else {
-                alert("恭喜通關！你是成就大師！");
-                location.reload();
-            }
-        }
-
-        initQuiz();
-    </script>
 </body>
 </html>
