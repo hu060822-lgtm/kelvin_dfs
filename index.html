@@ -3,173 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>岩壁群：30題核心成員測驗</title>
+    <title>岩壁群友情大考驗 💖</title>
     <style>
-        :root {
-            --pink-light: #fff0f3;
-            --pink-main: #ffc1cc;
-            --pink-dark: #ff8fa3;
-            --text: #4a4a4a;
-        }
         body {
-            background-color: var(--pink-light);
-            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            font-family: 'Comic Sans MS', 'Microsoft JhengHei', sans-serif;
+            background-color: #ffe6f0;
+            color: #d14777;
             margin: 0;
+            padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
         }
-        #quiz-card {
-            background: white;
-            width: 90%;
-            max-width: 600px;
+        header {
+            background-color: #ff99c2;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0;
+            color: white;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 2px;
+        }
+        .quiz-container {
+            background-color: white;
+            width: 85%;
+            max-width: 800px;
+            border-radius: 20px;
             padding: 30px;
-            border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(255, 143, 163, 0.2);
-            border: 3px solid var(--pink-main);
+            box-shadow: 0 8px 15px rgba(255, 153, 194, 0.3);
+            margin-bottom: 50px;
+            position: relative;
         }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: var(--pink-dark); font-size: 1.5rem; margin: 0; }
-        .progress { font-size: 0.9rem; color: #999; margin-top: 5px; }
-        .question-text { font-size: 1.1rem; font-weight: bold; margin: 20px 0; min-height: 60px; line-height: 1.5; }
-        .options-list { display: grid; gap: 10px; }
+        .question-block {
+            display: none; 
+        }
+        .question-block.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h2.question-title {
+            border-bottom: 2px dashed #ffb3d1;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 1.4em;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
         .option-btn {
-            background: white;
-            border: 2px solid var(--pink-main);
-            padding: 12px 15px;
-            border-radius: 12px;
+            background-color: #fff0f5;
+            border: 2px solid #ffb3d1;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            color: #d14777;
             cursor: pointer;
+            transition: all 0.3s;
             text-align: left;
-            transition: 0.2s;
-            font-size: 1rem;
         }
-        .option-btn:hover { background: var(--pink-light); border-color: var(--pink-dark); }
-        .option-btn.correct { background: #d1f7d1; border-color: #2ecc71; }
-        .option-btn.wrong { background: #ffdada; border-color: #ff4757; }
-        #result-area { display: none; text-align: center; }
-        .score-display { font-size: 3rem; font-weight: bold; color: var(--pink-dark); margin: 20px 0; }
-        .reload-btn {
-            background: var(--pink-dark);
+        .option-btn:hover {
+            background-color: #ffb3d1;
+            color: white;
+        }
+        .option-btn.selected {
+            background-color: #ff66a3;
+            border-color: #ff66a3;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(255, 102, 163, 0.3);
+        }
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        button.nav-btn {
+            background-color: #ff66a3;
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1.1em;
             cursor: pointer;
-            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        button.nav-btn:hover {
+            background-color: #ff4d94;
+            transform: translateY(-2px);
+        }
+        button.nav-btn:disabled {
+            background-color: #ffcce0;
+            cursor: not-allowed;
+            transform: translateY(0);
+        }
+        .progress {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #ff66a3;
+            font-size: 1.1em;
+        }
+        .result-container {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        .result-container h2 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ff4d94;
+        }
+        .result-container p {
+            font-size: 1.3em;
+            line-height: 1.6;
+        }
+        .score-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #ff66a3;
+            margin: 20px 0;
+            text-shadow: 2px 2px 0px #ffe6f0;
+        }
+        .restart-btn {
+            margin-top: 30px;
+            background-color: #ff99c2;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .restart-btn:hover {
+            background-color: #ff66a3;
+        }
+        .intro {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
 
-<div id="quiz-card">
-    <div id="quiz-area">
-        <div class="header">
-            <h1>🌸 岩壁群：核心成員考據 🌸</h1>
-            <div class="progress" id="progress-text">Question 1 / 30</div>
-        </div>
-        <div class="question-text" id="q-text">載入中...</div>
-        <div class="options-list" id="options-box"></div>
+<header>
+    <h1>✨ 岩壁群友情大考驗 ✨</h1>
+</header>
+
+<div class="quiz-container" id="quiz-container">
+    <div class="intro" id="intro-block">
+        <p>你有多了解這個伺服器裡的大家？<br>20題來自聊天紀錄的靈魂拷問，測測你是真朋友還是假兄弟！💖</p>
+        <button class="nav-btn" onclick="startQuiz()" style="margin-top: 20px; font-size: 1.2em;">開始測驗 🚀</button>
     </div>
 
-    <div id="result-area">
-        <h1>測驗結束！</h1>
-        <div class="score-display" id="final-score">0</div>
-        <p id="rank-msg"></p>
-        <button class="reload-btn" onclick="location.reload()">再戰一次</button>
+    <div id="questions-wrapper">
+        </div>
+
+    <div class="controls" id="controls" style="display: none;">
+        <button class="nav-btn" id="prev-btn" onclick="prevQuestion()">⬅️ 上一題</button>
+        <button class="nav-btn" id="next-btn" onclick="nextQuestion()">下一題 ➡️</button>
+        <button class="nav-btn" id="submit-btn" onclick="showResults()" style="display: none; background-color: #ff4d94;">提交看結果 🌟</button>
+    </div>
+    
+    <div class="progress" id="progress" style="display: none;">
+        進度：<span id="current-q">1</span> / 20
     </div>
 </div>
 
+<div class="quiz-container result-container" id="result-container">
+    <h2>測驗結束！🎉</h2>
+    <div class="score-display" id="score-display">100</div>
+    <p id="result-message">評語加載中...</p>
+    <button class="restart-btn" onclick="location.reload()">再玩一次 🔄</button>
+</div>
+
 <script>
-const quizData = [
-    { q: "一尾熊發布的「國軍招募文案」中，最後提到要收留哪種男孩？", o: ["學測心碎男孩", "被當心碎男孩", "失戀心碎男孩", "錢包遺失男孩"], a: 0 },
-    { q: "四尾熊在討論區突然提到「明天中午我就要回...」，目的地是哪裡？", o: ["沙鹿", "一中街", "梧棲", "學餐"], a: 2 },
-    { q: "二尾熊曾叮囑哪一個人的名字「不能讓他看到」對話內容？", o: ["呂宗承", "林星辰", "張紘瑞", "宋述翔"], a: 0 },
-    { q: "在「出遊討論區」頻道，六尾熊問了火車時間，請問是幾點的火車？", o: ["八點二十三", "七點四十三分", "十五點三十三分", "二十二點二十三分"], a: 1 },
-    { q: "下列哪一個暱稱**不符合**伺服器中以「尾熊」結尾的成員慣例？",a: ["二尾熊", "三尾熊", "四尾熊", "五尾熊"],a: 3},
-    { q: "誰在聊天紀錄中被指名為「熬夜亞軍」？", o: ["六尾熊", "七尾熊", "無尾熊", "二尾熊", "zheng"],  a: 0 },
-    { q: "六尾熊請大家喝完養樂多後，在群組抱怨發生了什麼事？", o: ["沒人說謝謝", "有人說不好喝", "大家都要喝第二瓶", "直接冷場沒人理"], a: 3 },
-    { q: "七尾熊排名的頂尖大學中，成大（NCKU）被排在第幾順位？", o: ["第一", "第二", "第三", "第四"], a: 3 },
-    { q: "無尾熊在「暈船仔測驗」中自爆拿了幾分？", o: ["20分", "50分", "80分", "100分"], a: 1 },
-    { q: "錫蘭的 YouTube 頻道是誰的姊姊推薦給無尾熊的？", o: ["一尾熊", "二尾熊", "六尾熊", "無尾熊"], a: 3 },
-    { q: "托沃·卡普在討論區中使用過哪一個帶有文學諧音的冷梗？", o: ["文學造脂", "詩情畫意", "岩壁之王", "學測戰士"], a: 0 },
-    { q: "六尾熊曾發布過一個關於什麼的 Google 表單統計請求？", o: ["晚餐吃什麼", "心理健康指數", "熬夜大賽", "畢業旅行意願"], a: 1 },
-    { q: "一尾熊在 2024 年 1 月貼出的「玩這個」遊戲連結是什麼？", o: ["Gartic Phone", "英雄聯盟", "Minecraft", "瓦羅蘭"], a: 0 },
-    { q: "三尾熊幫提到的「生日」預計要去進行什麼活動？", o: ["吃火鍋", "唱KTV", "吃牛排", "樹懶酒吧"], a: 2 },
-    { q: "針對「6 個人 2000 元」的價格討論，六尾熊的直白反應是什麼？", o: ["這很便宜耶", "這到底是什麼價錢", "我沒錢了", "大家平分吧"], a: 1 },
-    { q: "哪位成員在 2024年2月29日（閏年）發過訊息？", o: ["三尾熊", "六尾熊", "七尾熊", "二尾熊"], a: 3 }, },
-    { q: "二尾熊提到張紘瑞穿那件衣服去上課後，結果如何？", o: ["被老師罵", "被學妹搭訕", "有點出名了", "衣服破了"], a: 2 },
-    { q: "三尾熊在哪個對話中開玩笑建議跨年局要在「學餐」辦？", o: ["討論區", "台中人", "出遊討論區", "memes"], a: 1 },
-    { q: "一尾熊在討酒喝時問了哪句經典台詞？", o: ["我的伏特加呢", "給我一杯威士忌", "有人要喝啤酒嗎", "酒精在哪裡"], a: 0 },
-    { q: "無尾熊發送那個超級巨大的 `eat_plum` 表情符號時，當時在討論什麼？", o: ["晚餐", "學測", "完全沒有前文，純發送", "遊戲"], a: 2 },
-    { q: "三尾熊提到「想玩蔚藍檔案」是在哪一年的 5 月 20 日？", o: ["2023年", "2024年", "2025年", "2026年"], a: 0 },
-    { q: "2026/3/22 凌晨，誰被訊息標籤封為「熬夜亞軍」？", o: ["一尾熊", "二尾熊", "六尾熊", "七尾熊"], a: 2 },
-    { q: "七尾熊在 2025年11月9日 提到了哪種交換原則？", o: ["誠信交換", "等價交換", "隨機交換", "強制交換"], a: 1  },
-    { q: "七尾熊在問「今天到底是什麼局」時，是跟誰有局？", o: ["呂宗承", "六尾熊", "學長", "無尾熊"], a: 1 },
-    { q: "Kelvin 在伺服器成員中對應的「幾尾熊」暱稱是？", o: ["五尾熊", "六尾熊", "七尾熊", "八尾熊"], a: 2 },
-    { q: "二尾熊提到「林星辰」時，要他哪一杯酒？", o: ["屍體復甦者二號", "亞歷山大", "adios motherfucker", "客兄的下午茶"], a: 0 },
-    { q: "一尾熊曾在討論區中問過誰「你今天有考試嗎」？", o: ["二尾熊", "三尾熊", "六尾熊", "zheng"], a: 0 },
-    { q: "在 2025年12月1日，某人傳了一個單字「述」，是誰？", a: ["三尾熊", "一尾熊", "二尾熊", "六尾熊"], c: 0 },
-    { q: "zheng 在 2026 年 1 月對某個任務發出的指令是？", o: ["我來處理", "交給你了", "全部重寫", "明天再說"], a: 1 },
-    { q: "討論區紀錄中的最後一則訊息（2026/3/22）內容是什麼？", o: ["晚安", "我先睡了", "熬夜亞軍", "學測加油"], a: 2 }
-];
+    const quizData = [
+        {
+            question: "2024年8月，是誰在群組裡問了「諸位有推薦的台中餐廳口袋名單嗎」？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 三尾熊", "D. 四尾熊", "E. 七尾熊"],
+            answer: 4
+        },
+        {
+            question: "討論到去「起家雞南屯店」吃東西時，是誰殘酷地提醒大家「這間好像沒有內用」？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 三尾熊", "D. 無尾熊", "E. 七尾熊"],
+            answer: 2
+        },
+        {
+            question: "誰曾經發問「女生跟男生說自己月經來，男生到底要回啥」，並表示自己回了『真巧，我早上也夢遺』然後就被封鎖了？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 三尾熊", "D. 負一尾熊", "E. AllenLin"],
+            answer: 0
+        },
+        {
+            question: "誰在聊天中開心地宣稱「剛剛發現我的租屋補助是給4000，我房租4000，有住跟沒住一樣好爽」？",
+            options: ["A. 負一尾熊", "B. 托沃·卡普", "C. 無尾熊", "D. 三尾熊", "E. AllenLin"],
+            answer: 4
+        },
+        {
+            question: "二尾熊曾經夢到自己變成哪一隻賽馬，去參加森林系的吃到飽比賽之後，還去打棒球覺得超爽？",
+            options: ["A. 特別週", "B. 神鷹", "C. 草上飛", "D. 櫻花驀進王", "E. 東海帝王"],
+            answer: 3
+        },
+        {
+            question: "當七尾熊對無尾熊深情告白說「我只是想看看你」之後，無尾熊給出的回應是什麼？",
+            options: ["A. 你可以看我視訊", "B. 噁心，滾", "C. 等我一下，我洗個澡", "D. 給我錢", "E. 我要報警了"],
+            answer: 0
+        },
+        {
+            question: "誰在群組裡發出了「雖然今天一整天都沒吃東西，但幫她吃了半個漢堡還是蠻撐的」這種充滿戀愛酸臭味的言論？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 三尾熊", "D. 無尾熊", "E. 七尾熊"],
+            answer: 2
+        },
+        {
+            question: "一尾熊曾經發出豪語，表示如果哪一科考15級分就要請吃飯？",
+            options: ["A. 國文", "B. 英文", "C. 數學", "D. 自然", "E. 社會"],
+            answer: 1
+        },
+        {
+            question: "誰曾在群組中用超嚴肅的英文強烈譴責大家：「I vehemently denounce all individuals who have failed to purchase R.E.P.O.」？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 負一尾熊", "D. 無尾熊", "E. 七尾熊"],
+            answer: 1
+        },
+        {
+            question: "關於「十週年是十歲生日還是十一歲生日」的疑問，三尾熊的神邏輯給出了什麼答案？",
+            options: ["A. 十歲生日", "B. 十一歲生日", "C. 二十歲生日", "D. 七十歲生日", "E. 三千六百四十歲生日"],
+            answer: 3
+        },
+        {
+            question: "二尾熊曾經胡謅了一段關於「張紘瑞」的生平，在此設定中他出生於哪一個朝代，並且自稱屁眼人？",
+            options: ["A. 漢朝", "B. 宋朝", "C. 唐朝", "D. 明朝", "E. 清朝"],
+            answer: 2
+        },
+        {
+            question: "在討論某個機率與排列組合的問題時，負一尾熊給出的超譯神解釋是「因為____，所以9個裡面隨便抓兩個就好了」？",
+            options: ["A. 運氣好", "B. 長相問題", "C. 萬物皆空", "D. 性別平等", "E. 隨便啦"],
+            answer: 3
+        },
+        {
+            question: "有人在群組裡說「我的名子是牛奶巧克力」，這個人是誰？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 三尾熊", "D. 四尾熊", "E. 負一尾熊"],
+            answer: 1
+        },
+        {
+            question: "無尾熊在半夜兩點半抱怨「根本下不了旗，幹還有兩個傻逼沒走是怎樣」之後，他最後做了什麼決定？",
+            options: ["A. 繼續下棋到天亮", "B. 把電腦砸了", "C. 選擇早起下棋", "D. 放棄去睡覺", "E. 跑去吃麥當勞"],
+            answer: 2
+        },
+        {
+            question: "誰在群組中突然科普了1973年發生的「帕斯卡古拉事件(Pascagoula Abduction)」外星人綁架案，還問寶傑怎麼看？",
+            options: ["A. 一尾熊", "B. 二尾熊", "C. 三尾熊", "D. 四尾熊", "E. 山勞贖"],
+            answer: 1
+        },
+        {
+            question: "曾經有一次無尾熊氣噗噗地說「我生氣了」，是因為他想做什麼事卻沒有人陪他？",
+            options: ["A. 玩英雄聯盟", "B. 買宵夜", "C. 唱歌", "D. 玩原神", "E. 出去跳舞"],
+            answer: 4
+        },
+        {
+            question: "一尾熊在群組裡問了一句「要怎麼加入你的戰局」，結果被誰神回覆「搞雜交朋友了」？",
+            options: ["A. 七尾熊", "B. 二尾熊", "C. 三尾熊", "D. 負一尾熊", "E. 無尾熊"],
+            answer: 1
+        },
+        {
+            question: "二尾熊貼出《Tools Up!》的Steam遊戲網址後，他隨後悲從中來地問了一句什麼話？",
+            options: ["A. 誰要陪我玩", "B. 這遊戲好爛", "C. 為什麼要付錢", "D. do i have friends", "E. 幫我買"],
+            answer: 3
+        },
+        {
+            question: "某次有人貼出「侯友宜：若當選將恢復學校教育學生禮義廉恥」的新聞，一尾熊的第一反應是？",
+            options: ["A. 沒料", "B. 讚喔", "C. 哈哈", "D. 確實", "E. 太神啦"],
+            answer: 0
+        },
+        {
+            question: "某天二尾熊在群組宣稱「我是____」，並搭配了書呆子跟指著上面的Emoji，這個稱號是什麼？",
+            options: ["A. 邊緣人", "B. 單身狗", "C. 櫻花驀進王", "D. 帥哥", "E. 身心障礙者"],
+            answer: 4
+        }
+    ];
 
-let currentQ = 0;
-let score = 0;
+    let currentQuestionIndex = 0;
+    let userAnswers = new Array(quizData.length).fill(null);
 
-function loadQuestion() {
-    const q = quizData[currentQ];
-    document.getElementById('progress-text').innerText = `Question ${currentQ + 1} / 30`;
-    document.getElementById('q-text').innerText = q.q;
-    const box = document.getElementById('options-box');
-    box.innerHTML = '';
-    
-    q.o.forEach((opt, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(idx, btn);
-        box.appendChild(btn);
-    });
-}
+    const wrapper = document.getElementById('questions-wrapper');
+    const controls = document.getElementById('controls');
+    const progress = document.getElementById('progress');
+    const introBlock = document.getElementById('intro-block');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
 
-function checkAnswer(idx, btn) {
-    const correct = quizData[currentQ].a;
-    const btns = document.querySelectorAll('.option-btn');
-    btns.forEach(b => b.style.pointerEvents = 'none');
+    function initQuiz() {
+        quizData.forEach((q, index) => {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+            block.id = `question-${index}`;
+            
+            const title = document.createElement('h2');
+            title.className = 'question-title';
+            title.textContent = `Q${index + 1}. ${q.question}`;
+            block.appendChild(title);
 
-    if (idx === correct) {
-        btn.classList.add('correct');
-        score++;
-    } else {
-        btn.classList.add('wrong');
-        btns[correct].classList.add('correct');
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            q.options.forEach((opt, optIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(index, optIndex, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            block.appendChild(optionsDiv);
+            wrapper.appendChild(block);
+        });
     }
 
-    setTimeout(() => {
-        currentQ++;
-        if (currentQ < quizData.length) {
-            loadQuestion();
+    function startQuiz() {
+        introBlock.style.display = 'none';
+        controls.style.display = 'flex';
+        progress.style.display = 'block';
+        showQuestion(0);
+    }
+
+    function showQuestion(index) {
+        document.querySelectorAll('.question-block').forEach(el => el.classList.remove('active'));
+        document.getElementById(`question-${index}`).classList.add('active');
+        document.getElementById('current-q').textContent = index + 1;
+        
+        prevBtn.disabled = index === 0;
+
+        if (index === quizData.length - 1) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'block';
         } else {
-            showResult();
+            nextBtn.style.display = 'block';
+            submitBtn.style.display = 'none';
         }
-    }, 1000);
-}
+    }
 
-function showResult() {
-    document.getElementById('quiz-area').style.display = 'none';
-    document.getElementById('result-area').style.display = 'block';
-    document.getElementById('final-score').innerText = `${score} / 30`;
-    
-    let msg = "";
-    if (score >= 28) msg = "你是岩壁群的史官吧！";
-    else if (score >= 20) msg = "核心成員認證成功！";
-    else if (score >= 10) msg = "看來你偶爾會參與垃圾話環節。";
-    else msg = "你是潛水員還是剛入群的？";
-    document.getElementById('rank-msg').innerText = msg;
-}
+    function selectOption(qIndex, optIndex, btnElement) {
+        userAnswers[qIndex] = optIndex;
+        const siblings = btnElement.parentElement.children;
+        for (let sibling of siblings) {
+            sibling.classList.remove('selected');
+        }
+        btnElement.classList.add('selected');
+    }
 
-loadQuestion();
+    function nextQuestion() {
+        if (userAnswers[currentQuestionIndex] === null) {
+            alert("你還沒選答案喔！不准跳過！😎");
+            return;
+        }
+        if (currentQuestionIndex < quizData.length - 1) {
+            currentQuestionIndex++;
+            showQuestion(currentQuestionIndex);
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            showQuestion(currentQuestionIndex);
+        }
+    }
+
+    function showResults() {
+        if (userAnswers[currentQuestionIndex] === null) {
+            alert("最後一題還沒選喔！😎");
+            return;
+        }
+
+        let score = 0;
+        quizData.forEach((q, i) => {
+            if (userAnswers[i] === q.answer) {
+                score += 5; // 一題5分，總分100
+            }
+        });
+
+        document.getElementById('quiz-container').style.display = 'none';
+        const resultContainer = document.getElementById('result-container');
+        resultContainer.style.display = 'block';
+        document.getElementById('score-display').textContent = `${score} 分`;
+
+        let msg = "";
+        if (score === 100) {
+            msg = "太神啦！你根本是住在伺服器裡的守護靈吧！💯💖";
+        } else if (score >= 80) {
+            msg = "超猛！你絕對是群組裡的超級骨幹，什麼八卦都逃不過你的法眼！😎✨";
+        } else if (score >= 60) {
+            msg = "還不錯啦！算是有在關心大家，但有時候可能在潛水喔！🐢💦";
+        } else if (score >= 40) {
+            msg = "哎呀...你是不是都把伺服器靜音了？快去翻翻歷史紀錄啦！🥲🔍";
+        } else {
+            msg = "抓到了！你根本就是雲友誼！連大家昨天講了什麼幹話都不知道！😱💔";
+        }
+        document.getElementById('result-message').innerHTML = msg;
+    }
+
+    // 初始化測驗
+    initQuiz();
 </script>
 
 </body>
